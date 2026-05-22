@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>欧加真智能调光</title>
+  <style>
+    :root {
+      --bg: #f5f1e8;
+      --card: rgba(255, 252, 246, 0.88);
+      --card-strong: #fffdf8;
+      --text: #2f2720;
+      --muted: #7e6d5c;
+      --line: rgba(69, 43, 20, 0.12);
+      --accent: #cb6d42;
+      --accent-strong: #8f3d1f;
+      --accent-soft: rgba(203, 109, 66, 0.14);
+      --ok: #2d7a55;
+      --shadow: 0 24px 50px rgba(112, 76, 40, 0.14);
+      --radius: 26px;
+      --mono: "JetBrains Mono", "Cascadia Code", monospace;
+      --sans: "Noto Sans SC", "Microsoft YaHei UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(255, 183, 119, 0.42), transparent 28%),
+        radial-gradient(circle at 0% 20%, rgba(255, 255, 255, 0.75), transparent 22%),
+        linear-gradient(180deg, #f6f0e5 0%, #efe5d8 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(94, 65, 36, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(94, 65, 36, 0.03) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 92%);
+    }
+
+    .shell {
+      width: min(980px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
+    }
+
+    .hero, .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero {
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "AUTO DC";
+      position: absolute;
+      right: -12px;
+      top: 10px;
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: rgba(143, 61, 31, 0.08);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .lead {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .status-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--card-strong);
+      border: 1px solid rgba(143, 61, 31, 0.08);
+    }
+
+    .status-label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .status-value {
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-all;
+    }
+
+    .panel {
+      margin-top: 18px;
+      padding: 20px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .input, .textarea {
+      width: 100%;
+      border: 1px solid rgba(143, 61, 31, 0.16);
+      background: rgba(255, 255, 255, 0.84);
+      border-radius: 16px;
+      color: var(--text);
+      font: inherit;
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+
+    .input {
+      height: 46px;
+      padding: 0 14px;
+    }
+
+    .textarea {
+      min-height: 120px;
+      resize: vertical;
+      padding: 12px 14px;
+      line-height: 1.6;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .input:focus, .textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(203, 109, 66, 0.12);
+      transform: translateY(-1px);
+    }
+
+    .btn {
+      height: 46px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 16px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: .55; cursor: wait; transform: none; }
+    .btn-primary {
+      color: #fff8f3;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+      box-shadow: 0 14px 28px rgba(143, 61, 31, 0.24);
+    }
+    .btn-soft {
+      color: var(--accent-strong);
+      background: var(--accent-soft);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 16px;
+      line-height: 1.65;
+    }
+
+    .apps {
+      display: grid;
+      gap: 10px;
+      max-height: 50vh;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .app {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(143, 61, 31, 0.08);
+    }
+
+    .app input {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: var(--accent);
+    }
+
+    .app-name {
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .app-pkg {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--mono);
+      word-break: break-all;
+    }
+
+    .manual-wrap {
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .debug-box {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(143, 61, 31, 0.1);
+    }
+
+    .debug-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .debug-title {
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .debug-path {
+      margin-top: 5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent-strong);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .switch input {
+      width: 42px;
+      height: 24px;
+      margin: 0;
+      appearance: none;
+      border-radius: 999px;
+      background: rgba(126, 109, 92, 0.28);
+      position: relative;
+      transition: background .18s ease;
+    }
+
+    .switch input::after {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 3px;
+      top: 3px;
+      border-radius: 50%;
+      background: #fffdf8;
+      box-shadow: 0 2px 8px rgba(69, 43, 20, 0.18);
+      transition: transform .18s ease;
+    }
+
+    .switch input:checked {
+      background: var(--accent);
+    }
+
+    .switch input:checked::after {
+      transform: translateX(18px);
+    }
+
+    .log-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .interval-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      min-height: 46px;
+      border-radius: 16px;
+      background: rgba(203, 109, 66, 0.1);
+      color: var(--accent-strong);
+      font-weight: 800;
+    }
+
+    .interval-control input {
+      width: 58px;
+      height: 32px;
+      border: 1px solid rgba(143, 61, 31, 0.16);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--text);
+      font: inherit;
+      text-align: center;
+      outline: none;
+    }
+
+    .log-view {
+      margin: 14px 0 0;
+      max-height: 260px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 14px;
+      background: #2f2720;
+      color: #fff8f3;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-radius: 16px;
+      background: rgba(45, 122, 85, 0.1);
+      color: var(--ok);
+      display: none;
+    }
+
+    .notice.is-error {
+      display: block;
+      color: #9a2f2f;
+      background: rgba(154, 47, 47, 0.1);
+    }
+
+    .notice.is-show {
+      display: block;
+    }
+
+    .empty {
+      padding: 22px 16px;
+      border-radius: 18px;
+      border: 1px dashed rgba(143, 61, 31, 0.18);
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.44);
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 18px, 980px); padding-top: 14px; }
+      .hero, .panel { border-radius: 22px; }
+      .status-grid, .toolbar { grid-template-columns: 1fr; }
+      .btn { width: 100%; }
+      .apps { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <h1>欧加真智能调光</h1>
+      <p class="lead">默认保持“全亮度低频闪”，进入你指定的应用时切到“经典低频闪”，退出后自动恢复。当前版本以事件触发为主，只在应用切换时做判断，再用低频兜底校正，尽量减少常驻轮询耗电。</p>
+      <div class="status-grid">
+        <div class="status-card">
+          <span class="status-label">服务状态</span>
+          <span class="status-value" id="serviceState">读取中</span>
+        </div>
+        <div class="status-card">
+          <span class="status-label">当前模式值</span>
+          <span class="status-value" id="currentState">读取中</span>
+        </div>
+        <div class="status-card">
+          <span class="status-label">前台应用</span>
+          <span class="status-value" id="topPackage">读取中</span>
+        </div>
+        <div class="status-card">
+          <span class="status-label">调试日志</span>
+          <span class="status-value" id="debugState">读取中</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <input class="input" id="searchInput" type="search" placeholder="搜索应用名或包名">
+        <input class="input" id="manualQuickAdd" type="text" placeholder="手动输入包名后点右侧添加">
+        <button class="btn btn-soft" id="addManualBtn" type="button">添加包名</button>
+        <button class="btn btn-soft" id="refreshBtn" type="button">刷新列表</button>
+      </div>
+
+      <p class="hint">下面默认列出第三方应用。勾选后保存即可；如果某个应用没列出来，可以直接在下方“手动包名”区域补充。</p>
+      <div class="apps" id="appsList"></div>
+
+      <div class="manual-wrap">
+        <label class="status-label" for="manualPackages">手动包名</label>
+        <textarea class="textarea" id="manualPackages" placeholder="每行一个包名，例如：&#10;com.example.app"></textarea>
+        <button class="btn btn-primary" id="saveBtn" type="button">保存并立即生效</button>
+      </div>
+
+      <div class="debug-box">
+        <div class="debug-head">
+          <div>
+            <div class="debug-title">调试日志</div>
+            <div class="debug-path" id="logPath">读取中</div>
+          </div>
+          <label class="switch">
+            <input id="debugToggle" type="checkbox">
+            <span>记录</span>
+          </label>
+        </div>
+        <div class="log-actions">
+          <label class="interval-control">
+            <span>刷新</span>
+            <input id="refreshIntervalInput" type="number" min="1" max="10" step="1" value="8">
+            <span>秒</span>
+          </label>
+          <button class="btn btn-soft" id="saveRefreshIntervalBtn" type="button">保存间隔</button>
+          <button class="btn btn-soft" id="readLogBtn" type="button">读取最近日志</button>
+          <button class="btn btn-soft" id="clearLogBtn" type="button">清空日志</button>
+        </div>
+        <pre class="log-view" id="logView">尚未读取日志。</pre>
+      </div>
+
+      <div class="notice" id="notice"></div>
+    </section>
+  </main>
+
+  <script>
+    const MODULE_ID = "oplus_smart_dimming";
+    const SCRIPT_BASE = `/data/adb/modules/${MODULE_ID}/scripts`;
+    const appState = {
+      apps: [],
+      selected: new Set(),
+      filter: "",
+      debugEnabled: false,
+      logPath: "",
+      refreshInterval: 8,
+      refreshTimer: null,
+    };
+
+    const els = {
+      serviceState: document.getElementById("serviceState"),
+      currentState: document.getElementById("currentState"),
+      topPackage: document.getElementById("topPackage"),
+      debugState: document.getElementById("debugState"),
+      logPath: document.getElementById("logPath"),
+      logView: document.getElementById("logView"),
+      appsList: document.getElementById("appsList"),
+      searchInput: document.getElementById("searchInput"),
+      manualPackages: document.getElementById("manualPackages"),
+      manualQuickAdd: document.getElementById("manualQuickAdd"),
+      addManualBtn: document.getElementById("addManualBtn"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      saveBtn: document.getElementById("saveBtn"),
+      debugToggle: document.getElementById("debugToggle"),
+      refreshIntervalInput: document.getElementById("refreshIntervalInput"),
+      saveRefreshIntervalBtn: document.getElementById("saveRefreshIntervalBtn"),
+      readLogBtn: document.getElementById("readLogBtn"),
+      clearLogBtn: document.getElementById("clearLogBtn"),
+      notice: document.getElementById("notice"),
+    };
+
+    async function execCommand(command) {
+      if (globalThis.ksu && typeof globalThis.ksu.exec === "function") {
+        return normalizeExecResult(await Promise.resolve(globalThis.ksu.exec(command)));
+      }
+      if (typeof globalThis.exec === "function") {
+        return normalizeExecResult(await Promise.resolve(globalThis.exec(command)));
+      }
+      throw new Error("当前环境未提供 KernelSU WebUI API");
+    }
+
+    function normalizeExecResult(result) {
+      if (typeof result === "string") {
+        return { errno: 0, stdout: result, stderr: "" };
+      }
+      if (!result || typeof result !== "object") {
+        return { errno: 0, stdout: "", stderr: "" };
+      }
+      return {
+        errno: Number(result.errno || 0),
+        stdout: result.stdout || "",
+        stderr: result.stderr || "",
+      };
+    }
+
+    function shellQuote(text) {
+      return `'${String(text).replace(/'/g, `'\\''`)}'`;
+    }
+
+    function setNotice(message, isError = false) {
+      els.notice.textContent = message;
+      els.notice.className = `notice ${message ? "is-show" : ""} ${isError ? "is-error" : ""}`.trim();
+    }
+
+    function normalizePackages(lines) {
+      return [...new Set(
+        lines
+          .map((line) => line.trim())
+          .filter((line) => /^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)+$/.test(line))
+      )].sort((a, b) => a.localeCompare(b));
+    }
+
+    function syncManualTextarea() {
+      const extra = normalizePackages(
+        els.manualPackages.value.split(/\r?\n/)
+          .concat([...appState.selected].filter((pkg) => !appState.apps.some((app) => app.pkg === pkg)))
+      );
+      els.manualPackages.value = extra.join("\n");
+    }
+
+    function renderApps() {
+      const keyword = appState.filter.trim().toLowerCase();
+      const visibleApps = appState.apps.filter((app) => {
+        if (!keyword) return true;
+        return app.label.toLowerCase().includes(keyword) || app.pkg.toLowerCase().includes(keyword);
+      });
+
+      if (!visibleApps.length) {
+        els.appsList.innerHTML = '<div class="empty">没有匹配到应用，可以直接在下方手动输入包名。</div>';
+        return;
+      }
+
+      els.appsList.innerHTML = visibleApps.map((app) => {
+        const checked = appState.selected.has(app.pkg) ? "checked" : "";
+        return `
+          <label class="app">
+            <input type="checkbox" data-pkg="${app.pkg}" ${checked}>
+            <span>
+              <span class="app-name">${escapeHtml(app.label)}</span>
+              <span class="app-pkg">${escapeHtml(app.pkg)}</span>
+            </span>
+          </label>
+        `;
+      }).join("");
+
+      els.appsList.querySelectorAll("input[type=checkbox]").forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) {
+            appState.selected.add(input.dataset.pkg);
+          } else {
+            appState.selected.delete(input.dataset.pkg);
+          }
+          syncManualTextarea();
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    async function loadRuntimeState() {
+      const result = await execCommand(`sh ${SCRIPT_BASE}/read_state.sh`);
+      if (result.errno && result.errno !== 0) {
+        throw new Error(result.stderr || "读取状态失败");
+      }
+
+      const data = {};
+      (result.stdout || "").split(/\r?\n/).forEach((line) => {
+        const index = line.indexOf("=");
+        if (index > 0) {
+          data[line.slice(0, index)] = line.slice(index + 1);
+        }
+      });
+
+      els.serviceState.textContent = data.service || "未知";
+      els.currentState.textContent = data.state || "未知";
+      els.topPackage.textContent = data.top || "无";
+      applyRuntimeState(data);
+    }
+
+    function applyRuntimeState(data) {
+      appState.debugEnabled = data.debug === "1";
+      appState.logPath = data.log || "";
+      appState.refreshInterval = normalizeRefreshInterval(data.refresh || appState.refreshInterval);
+      els.debugState.textContent = appState.debugEnabled ? "开启" : "关闭";
+      els.debugToggle.checked = appState.debugEnabled;
+      els.logPath.textContent = appState.logPath || "日志路径未知";
+      els.refreshIntervalInput.value = String(appState.refreshInterval);
+      restartRefreshTimer();
+    }
+
+    function normalizeRefreshInterval(value) {
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed)) return 8;
+      return Math.min(10, Math.max(1, parsed));
+    }
+
+    async function loadApps() {
+      setBusy(true);
+      setNotice("");
+
+      try {
+        const [appsResult, configResult, stateResult] = await Promise.all([
+          execCommand(`sh ${SCRIPT_BASE}/list_apps.sh`),
+          execCommand(`sh ${SCRIPT_BASE}/read_config.sh`),
+          execCommand(`sh ${SCRIPT_BASE}/read_state.sh`),
+        ]);
+
+        if (appsResult.errno !== 0 || configResult.errno !== 0 || stateResult.errno !== 0) {
+          throw new Error(appsResult.stderr || configResult.stderr || stateResult.stderr || "读取失败");
+        }
+
+        const selected = new Set(
+          normalizePackages((configResult.stdout || "").split(/\r?\n/))
+        );
+        const apps = (appsResult.stdout || "")
+          .split(/\r?\n/)
+          .filter(Boolean)
+          .map((line) => {
+            const [pkg, selectedFlag, label] = line.split("\t");
+            if (selectedFlag === "1") {
+              selected.add(pkg);
+            }
+            return { pkg, label: label || pkg };
+          });
+
+        appState.apps = apps;
+        appState.selected = selected;
+        els.manualPackages.value = normalizePackages([...selected].filter((pkg) => !apps.some((app) => app.pkg === pkg))).join("\n");
+        syncManualTextarea();
+        renderApps();
+
+        const stateData = {};
+        (stateResult.stdout || "").split(/\r?\n/).forEach((line) => {
+          const index = line.indexOf("=");
+          if (index > 0) {
+            stateData[line.slice(0, index)] = line.slice(index + 1);
+          }
+        });
+        els.serviceState.textContent = stateData.service || "未知";
+        els.currentState.textContent = stateData.state || "未知";
+        els.topPackage.textContent = stateData.top || "无";
+        applyRuntimeState(stateData);
+      } catch (error) {
+        setNotice(error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function setBusy(busy) {
+      els.saveBtn.disabled = busy;
+      els.refreshBtn.disabled = busy;
+      els.addManualBtn.disabled = busy;
+      els.debugToggle.disabled = busy;
+      els.refreshIntervalInput.disabled = busy;
+      els.saveRefreshIntervalBtn.disabled = busy;
+      els.readLogBtn.disabled = busy;
+      els.clearLogBtn.disabled = busy;
+    }
+
+    function collectPackages() {
+      const manualPackages = normalizePackages(els.manualPackages.value.split(/\r?\n/));
+      const allPackages = normalizePackages([...appState.selected, ...manualPackages]);
+      return allPackages;
+    }
+
+    async function savePackages() {
+      setBusy(true);
+      setNotice("");
+
+      try {
+        const packages = collectPackages();
+        const payload = btoa(unescape(encodeURIComponent(packages.join("\n"))));
+        const result = await execCommand(`sh ${SCRIPT_BASE}/save_config.sh ${shellQuote(payload)}`);
+
+        if (result.errno && result.errno !== 0) {
+          throw new Error(result.stderr || result.stdout || "保存失败");
+        }
+
+        setNotice((result.stdout || "保存完成").trim() || "保存完成");
+        await loadApps();
+      } catch (error) {
+        setNotice(error.message || String(error), true);
+        setBusy(false);
+      }
+    }
+
+    async function setDebugLogging(enabled) {
+      setBusy(true);
+      setNotice("");
+
+      try {
+        const result = await execCommand(`sh ${SCRIPT_BASE}/set_debug.sh ${enabled ? "1" : "0"}`);
+        if (result.errno !== 0) {
+          throw new Error(result.stderr || result.stdout || "设置调试日志失败");
+        }
+
+        setNotice((result.stdout || "调试日志设置完成").trim());
+        await loadRuntimeState();
+        if (enabled) {
+          await readLog();
+        }
+      } catch (error) {
+        setNotice(error.message || String(error), true);
+        els.debugToggle.checked = appState.debugEnabled;
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function readLog() {
+      const result = await execCommand(`sh ${SCRIPT_BASE}/read_log.sh`);
+      if (result.errno !== 0) {
+        throw new Error(result.stderr || result.stdout || "读取日志失败");
+      }
+      els.logView.textContent = result.stdout || "日志为空。";
+    }
+
+    async function clearLog() {
+      setBusy(true);
+      setNotice("");
+
+      try {
+        const result = await execCommand(`sh ${SCRIPT_BASE}/clear_log.sh`);
+        if (result.errno !== 0) {
+          throw new Error(result.stderr || result.stdout || "清空日志失败");
+        }
+        els.logView.textContent = "日志已清空。";
+        setNotice((result.stdout || "日志已清空").trim());
+      } catch (error) {
+        setNotice(error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    async function saveRefreshInterval() {
+      setBusy(true);
+      setNotice("");
+
+      try {
+        const interval = normalizeRefreshInterval(els.refreshIntervalInput.value);
+        els.refreshIntervalInput.value = String(interval);
+        const result = await execCommand(`sh ${SCRIPT_BASE}/set_refresh_interval.sh ${interval}`);
+
+        if (result.errno !== 0) {
+          throw new Error(result.stderr || result.stdout || "保存刷新间隔失败");
+        }
+
+        appState.refreshInterval = interval;
+        restartRefreshTimer();
+        setNotice((result.stdout || "刷新间隔已保存").trim());
+      } catch (error) {
+        setNotice(error.message || String(error), true);
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    function restartRefreshTimer() {
+      if (appState.refreshTimer) {
+        clearInterval(appState.refreshTimer);
+      }
+
+      appState.refreshTimer = setInterval(async () => {
+        try {
+          await loadRuntimeState();
+          if (appState.debugEnabled) {
+            await readLog();
+          }
+        } catch (error) {
+          // 状态轮询失败时保持当前界面，避免打断正在配置的用户。
+        }
+      }, appState.refreshInterval * 1000);
+    }
+
+    els.searchInput.addEventListener("input", () => {
+      appState.filter = els.searchInput.value;
+      renderApps();
+    });
+
+    els.refreshBtn.addEventListener("click", loadApps);
+    els.saveBtn.addEventListener("click", savePackages);
+    els.debugToggle.addEventListener("change", () => setDebugLogging(els.debugToggle.checked));
+    els.saveRefreshIntervalBtn.addEventListener("click", saveRefreshInterval);
+    els.refreshIntervalInput.addEventListener("change", () => {
+      els.refreshIntervalInput.value = String(normalizeRefreshInterval(els.refreshIntervalInput.value));
+    });
+    els.readLogBtn.addEventListener("click", async () => {
+      try {
+        await readLog();
+      } catch (error) {
+        setNotice(error.message || String(error), true);
+      }
+    });
+    els.clearLogBtn.addEventListener("click", clearLog);
+    els.addManualBtn.addEventListener("click", () => {
+      const value = els.manualQuickAdd.value.trim();
+      if (!value) return;
+      if (!/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)+$/.test(value)) {
+        setNotice("包名格式不正确", true);
+        return;
+      }
+      const next = normalizePackages(els.manualPackages.value.split(/\r?\n/).concat(value));
+      els.manualPackages.value = next.join("\n");
+      appState.selected.add(value);
+      els.manualQuickAdd.value = "";
+      renderApps();
+      setNotice("已加入待保存名单");
+    });
+
+    loadApps();
+    restartRefreshTimer();
+  </script>
+</body>
+</html>
