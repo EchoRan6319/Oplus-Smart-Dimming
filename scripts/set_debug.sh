@@ -4,7 +4,6 @@ MODDIR=${0%/*}
 . "$MODDIR/common.sh"
 
 load_debug_config
-load_refresh_interval
 set_debug_logging "$1"
 
 if ensure_service_running; then

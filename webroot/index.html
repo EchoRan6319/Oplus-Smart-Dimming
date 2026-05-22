@@ -5,11 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>欧加真智能调光</title>
   <style>
+    :root {
+      --bg: #f5efe4;
+      --paper: #fffdf9;
+      --paper-strong: #ffffff;
+      --line: #e5d8c6;
+      --line-soft: #f0e6d9;
+      --text: #2f261e;
+      --muted: #7b6a58;
+      --accent: #bf6b3f;
+      --accent-dark: #8d4523;
+      --accent-soft: #f3e1d2;
+      --ok-bg: #e6f5ec;
+      --ok-text: #246244;
+      --error-bg: #ffe8e8;
+      --error-text: #a12f2f;
+      --shadow: rgba(119, 78, 34, 0.12);
+    }
     body {
       margin: 0;
-      padding: 16px;
-      background: #f6f6f6;
-      color: #111;
+      padding: 18px;
+      background:
+        radial-gradient(circle at top right, #ffd8b8 0, rgba(255, 216, 184, 0) 28%),
+        linear-gradient(180deg, #f6f1e8 0%, #efe4d6 100%);
+      color: var(--text);
       font-family: "Microsoft YaHei UI", sans-serif;
       font-size: 14px;
       line-height: 1.5;
@@ -19,15 +38,38 @@
       margin: 0 auto;
     }
     .card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 18px 40px var(--shadow);
+    }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 22px;
+    }
+    .hero h1::after {
+      content: "AUTO DC";
+      position: absolute;
+      right: 4px;
+      bottom: -10px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      color: #f0dcc9;
+      z-index: -1;
+      pointer-events: none;
+      white-space: nowrap;
     }
     h1 {
       margin: 0 0 10px;
-      font-size: 24px;
+      font-size: 28px;
+      line-height: 1.15;
+      position: relative;
+      z-index: 1;
+      display: inline-block;
     }
     h2 {
       margin: 0 0 12px;
@@ -42,132 +84,251 @@
     .label {
       display: inline-block;
       min-width: 92px;
-      color: #666;
+      color: var(--muted);
+    }
+    .lead {
+      color: var(--muted);
+      line-height: 1.7;
+      max-width: 720px;
+      position: relative;
+      z-index: 1;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .status-box {
+      background: var(--paper-strong);
+      border: 1px solid var(--line-soft);
+      border-radius: 18px;
+      padding: 14px 15px;
+      min-height: 78px;
+    }
+    .status-title {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .status-value {
+      font-size: 16px;
+      font-weight: 700;
+      word-break: break-all;
     }
     input[type="text"],
     input[type="number"],
     textarea {
       width: 100%;
       box-sizing: border-box;
-      border: 1px solid #bbb;
-      border-radius: 8px;
-      padding: 10px;
+      border: 1px solid #d8c4ae;
+      border-radius: 14px;
+      padding: 11px 12px;
       font: inherit;
-      background: #fff;
-      color: #111;
+      background: #fffdfa;
+      color: var(--text);
     }
     textarea {
-      min-height: 120px;
+      min-height: 136px;
       resize: vertical;
       font-family: monospace;
     }
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(191, 107, 63, 0.12);
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.4fr auto auto;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
     button {
       border: 0;
-      border-radius: 8px;
-      padding: 10px 14px;
-      background: #1677ff;
+      border-radius: 14px;
+      padding: 11px 15px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
       color: #fff;
       font: inherit;
+      font-weight: 700;
       cursor: pointer;
       margin-right: 8px;
       margin-bottom: 8px;
+      box-shadow: 0 10px 22px rgba(141, 69, 35, 0.18);
     }
     button.secondary {
-      background: #666;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      box-shadow: none;
     }
     button:disabled {
       opacity: 0.6;
       cursor: default;
     }
+    .actions {
+      margin-top: 10px;
+    }
     .notice {
       display: none;
       margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: #e8f3ff;
-      color: #0b4ea2;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--ok-bg);
+      color: var(--ok-text);
       white-space: pre-wrap;
       word-break: break-word;
     }
     .notice.error {
-      background: #ffecec;
-      color: #b42318;
+      background: var(--error-bg);
+      color: var(--error-text);
     }
     .muted {
-      color: #666;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
     .apps {
       max-height: 360px;
       overflow: auto;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 8px;
-      background: #fafafa;
+      border: 1px solid var(--line-soft);
+      border-radius: 16px;
+      padding: 10px;
+      background: #fffaf4;
     }
     .app-item {
       display: block;
-      padding: 6px 4px;
-      border-bottom: 1px solid #eee;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line-soft);
       word-break: break-all;
     }
     .app-item:last-child {
       border-bottom: 0;
     }
-    .log {
-      min-height: 160px;
-      background: #111;
-      color: #d7ffd7;
-      border-radius: 8px;
-      padding: 10px;
-      white-space: pre-wrap;
+    .app-item input {
+      margin-right: 8px;
+      accent-color: var(--accent);
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .panel-head p {
+      margin: 0;
+    }
+    .switch-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-dark);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tip-box {
+      margin-bottom: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #f9efe5;
+      color: var(--muted);
+      overflow-wrap: anywhere;
       word-break: break-word;
-      font-family: monospace;
-      overflow: auto;
+    }
+    #logPath,
+    #logPathInDebug {
+      display: inline;
+      overflow-wrap: anywhere;
+      word-break: break-all;
+    }
+    @media (max-width: 760px) {
+      body {
+        padding: 12px;
+      }
+      .card,
+      .hero {
+        border-radius: 18px;
+      }
+      .status-grid,
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+      button {
+        width: 100%;
+      }
+      .panel-head {
+        display: block;
+      }
+      .hero h1::after {
+        right: -6px;
+        bottom: -8px;
+        font-size: 26px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
+    <div class="card hero">
       <h1>欧加真智能调光</h1>
-      <p>这是兼容性优先的极简 WebUI。先确认页面能正常显示，再继续加功能。</p>
-      <div class="row"><span class="label">服务状态</span><span id="serviceState">读取中</span></div>
-      <div class="row"><span class="label">当前模式</span><span id="currentState">读取中</span></div>
-      <div class="row"><span class="label">前台应用</span><span id="topPackage">读取中</span></div>
-      <div class="row"><span class="label">调试日志</span><span id="debugState">读取中</span></div>
-      <div class="row"><span class="label">日志路径</span><span id="logPath" class="muted">读取中</span></div>
-      <button id="refreshStateBtn" type="button">刷新状态</button>
-      <button id="loadAppsBtn" class="secondary" type="button">加载第三方应用</button>
-      <button id="readLogBtn" class="secondary" type="button">读取日志</button>
+      <p class="lead">默认保持全亮度低频闪，进入你选中的应用时切到经典低频闪，退出后自动恢复。当前版本走稳定优先的轮询方案，避免后台服务崩掉。</p>
+      <div class="status-grid">
+        <div class="status-box">
+          <span class="status-title">服务状态</span>
+          <span id="serviceState" class="status-value">读取中</span>
+        </div>
+        <div class="status-box">
+          <span class="status-title">当前模式</span>
+          <span id="currentState" class="status-value">读取中</span>
+        </div>
+        <div class="status-box">
+          <span class="status-title">调试日志</span>
+          <span id="debugState" class="status-value">读取中</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button id="refreshStateBtn" type="button">刷新状态</button>
+        <button id="loadAppsBtn" class="secondary" type="button">加载第三方应用</button>
+      </div>
+      <p class="muted">日志路径：<span id="logPath">读取中</span></p>
       <div id="notice" class="notice"></div>
     </div>
 
     <div class="card">
-      <h2>应用名单</h2>
-      <p class="muted">只加载第三方应用，不自动首屏扫描。勾选后点保存即可。</p>
-      <div class="row">
+      <div class="panel-head">
+        <h2>应用名单</h2>
+        <p class="muted">只加载第三方应用，不扫系统应用。</p>
+      </div>
+      <div class="tip-box">勾选应用后保存即可。当前后台轮询间隔固定为 3 秒，这个参数先保持稳定，不开放给普通用户修改。</div>
+      <div class="toolbar">
         <input id="searchInput" type="text" placeholder="搜索包名">
+        <button id="saveBtn" type="button">保存并立即生效</button>
+        <button id="reloadBtn" class="secondary" type="button">刷新配置显示</button>
       </div>
       <div id="appsList" class="apps">尚未加载应用列表。</div>
       <div class="row" style="margin-top:12px;">
         <textarea id="manualPackages" placeholder="每行一个包名，例如：&#10;com.example.app"></textarea>
       </div>
-      <button id="saveBtn" type="button">保存并立即生效</button>
-      <button id="reloadBtn" class="secondary" type="button">仅刷新配置显示</button>
     </div>
 
     <div class="card">
-      <h2>调试</h2>
-      <div class="row">
-        <label><input id="debugToggle" type="checkbox"> 开启调试日志</label>
+      <div class="panel-head">
+        <div>
+          <h2>调试与日志</h2>
+          <p class="muted">WebUI 状态每 3 秒刷新一次，和后台轮询保持一致。</p>
+        </div>
+        <label class="switch-line"><input id="debugToggle" type="checkbox"> 开启调试日志</label>
       </div>
-      <div class="row">
-        <span class="label">刷新间隔</span>
-        <input id="refreshIntervalInput" type="number" min="1" max="10" step="1" value="8">
+      <div class="tip-box">日志文件保存在 <span id="logPathInDebug">读取中</span>。需要查看详细记录时，请到文件管理器中打开这个文件。</div>
+      <div class="actions">
+        <button id="clearLogBtn" class="secondary" type="button">清空日志</button>
       </div>
-      <button id="saveRefreshBtn" type="button">保存刷新间隔</button>
-      <button id="clearLogBtn" class="secondary" type="button">清空日志</button>
-      <div id="logView" class="log">尚未读取日志。</div>
     </div>
   </div>
 
@@ -194,14 +355,12 @@
       selectedMap: {},
       filter: "",
       debugEnabled: false,
-      refreshInterval: 8,
       timerId: 0
     };
 
     const els = {
       serviceState: document.getElementById("serviceState"),
       currentState: document.getElementById("currentState"),
-      topPackage: document.getElementById("topPackage"),
       debugState: document.getElementById("debugState"),
       logPath: document.getElementById("logPath"),
       notice: document.getElementById("notice"),
@@ -212,12 +371,9 @@
       reloadBtn: document.getElementById("reloadBtn"),
       refreshStateBtn: document.getElementById("refreshStateBtn"),
       loadAppsBtn: document.getElementById("loadAppsBtn"),
-      readLogBtn: document.getElementById("readLogBtn"),
       clearLogBtn: document.getElementById("clearLogBtn"),
-      logView: document.getElementById("logView"),
       debugToggle: document.getElementById("debugToggle"),
-      refreshIntervalInput: document.getElementById("refreshIntervalInput"),
-      saveRefreshBtn: document.getElementById("saveRefreshBtn")
+      logPathInDebug: document.getElementById("logPathInDebug")
     };
 
     function setNotice(message, isError) {
@@ -231,11 +387,8 @@
       els.reloadBtn.disabled = disabled;
       els.refreshStateBtn.disabled = disabled;
       els.loadAppsBtn.disabled = disabled;
-      els.readLogBtn.disabled = disabled;
       els.clearLogBtn.disabled = disabled;
       els.debugToggle.disabled = disabled;
-      els.refreshIntervalInput.disabled = disabled;
-      els.saveRefreshBtn.disabled = disabled;
     }
 
     function shellQuote(text) {
@@ -279,27 +432,14 @@
       return result;
     }
 
-    function normalizeInterval(value) {
-      const parsed = parseInt(value, 10);
-      if (!parsed || parsed < 1) {
-        return 8;
-      }
-      if (parsed > 10) {
-        return 10;
-      }
-      return parsed;
-    }
-
     function applyState(stateData) {
       els.serviceState.textContent = stateData.service || "未知";
       els.currentState.textContent = stateData.state || "未知";
-      els.topPackage.textContent = stateData.top || "无";
       appState.debugEnabled = stateData.debug === "1";
-      appState.refreshInterval = normalizeInterval(stateData.refresh || appState.refreshInterval);
       els.debugState.textContent = appState.debugEnabled ? "开启" : "关闭";
       els.debugToggle.checked = appState.debugEnabled;
       els.logPath.textContent = stateData.log || "未知";
-      els.refreshIntervalInput.value = String(appState.refreshInterval);
+      els.logPathInDebug.textContent = stateData.log || "未知";
       restartTimer();
     }
 
@@ -465,38 +605,6 @@
       });
     }
 
-    function saveRefreshInterval() {
-      setBusy(true);
-      setNotice("");
-
-      const interval = normalizeInterval(els.refreshIntervalInput.value);
-      els.refreshIntervalInput.value = String(interval);
-
-      return execCommand("sh " + SCRIPT_BASE + "/set_refresh_interval.sh " + interval).then(function(result) {
-        if (result.errno !== 0) {
-          throw new Error(result.stderr || result.stdout || "保存刷新间隔失败");
-        }
-        appState.refreshInterval = interval;
-        restartTimer();
-        setNotice((result.stdout || "保存完成").replace(/^\s+|\s+$/g, ""), false);
-      }).catch(function(error) {
-        setNotice(error.message || String(error), true);
-      }).then(function() {
-        setBusy(false);
-      });
-    }
-
-    function readLog() {
-      return execCommand("sh " + SCRIPT_BASE + "/read_log.sh").then(function(result) {
-        if (result.errno !== 0) {
-          throw new Error(result.stderr || result.stdout || "读取日志失败");
-        }
-        els.logView.textContent = result.stdout || "日志为空。";
-      }).catch(function(error) {
-        setNotice(error.message || String(error), true);
-      });
-    }
-
     function clearLog() {
       setBusy(true);
       setNotice("");
@@ -505,7 +613,6 @@
         if (result.errno !== 0) {
           throw new Error(result.stderr || result.stdout || "清空日志失败");
         }
-        els.logView.textContent = "日志已清空。";
         setNotice((result.stdout || "日志已清空").replace(/^\s+|\s+$/g, ""), false);
       }).catch(function(error) {
         setNotice(error.message || String(error), true);
@@ -520,7 +627,7 @@
       }
       appState.timerId = setInterval(function() {
         loadRuntimeState();
-      }, appState.refreshInterval * 1000);
+      }, 3000);
     }
 
     function escapeHtml(text) {
@@ -556,17 +663,19 @@
       });
     };
     els.loadAppsBtn.onclick = loadApps;
-    els.readLogBtn.onclick = readLog;
     els.clearLogBtn.onclick = clearLog;
     els.debugToggle.onchange = function() {
       setDebug(els.debugToggle.checked);
     };
-    els.saveRefreshBtn.onclick = saveRefreshInterval;
 
-    setNotice("WebUI 已按 KernelSU 官方 API 模式加载，正在读取状态...", false);
+    setNotice("WebUI 已按稳定模式加载，正在读取状态...", false);
     Promise.all([loadRuntimeState(), readConfig()]).then(function() {
       setNotice("WebUI 已就绪。", false);
-      toast("欧加真智能调光 WebUI 已就绪");
+      try {
+        toast("欧加真智能调光 WebUI 已就绪");
+      } catch (error) {
+        // Toast is cosmetic; keep the WebUI usable if the host does not expose it.
+      }
     }).catch(function(error) {
       setNotice(error.message || String(error), true);
     });

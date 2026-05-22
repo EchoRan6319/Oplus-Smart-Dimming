@@ -5,18 +5,9 @@ MODDIR=${0%/*}
 
 ensure_config_file
 
-service_alive() {
-    [ -f "$PID_FILE" ] || return 1
-    PID=$(cat "$PID_FILE" 2>/dev/null)
-    [ -n "$PID" ] || return 1
-    [ -d "/proc/$PID" ]
-}
-
 start_service() {
     echo "⚠️ 后台服务未运行，正在尝试拉起..."
-    rm -f "$PID_FILE"
-    sh "$MODDIR/service.sh" >/dev/null 2>&1 &
-    sleep 2
+    start_service_detached
 }
 
 if ! service_alive; then

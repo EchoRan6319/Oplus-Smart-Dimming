@@ -13,23 +13,15 @@ DEBUG_LOG_FILE="$CONFIG_DIR/smart_dimming.log"
 LEGACY_CONFIG_FILE="$CONFIG_DIR/games.txt"
 LEGACY_DEBUG_FLAG_FILE="$CONFIG_DIR/debug_logging.enabled"
 LEGACY_LOG_FILE="$CONFIG_DIR/smart_dimming_log.txt"
-LEGACY_REFRESH_INTERVAL_FILE="$CONFIG_DIR/refresh_interval.txt"
 PID_FILE="/data/local/tmp/oplus_smart_dimming.pid"
-FIFO_FILE="/data/local/tmp/oplus_smart_dimming.events"
-WATCHDOG_PID_FILE="/data/local/tmp/oplus_smart_dimming.watchdog.pid"
-LOGCAT_PID_FILE="/data/local/tmp/oplus_smart_dimming.logcat.pid"
 STATE_FILE="/data/local/tmp/oplus_smart_dimming.state"
 BOOT_LOG_FILE="/data/local/tmp/oplus_smart_dimming.boot.log"
 SETTING_KEY="display_single_pulse_eyeprotection_switch"
 DEFAULT_STATE="2"
 CLASSIC_STATE="0"
-WATCHDOG_INTERVAL="15"
-MIN_SYNC_INTERVAL="2"
 LAST_WRITTEN_STATE=""
 LAST_WRITTEN_PACKAGE=""
 DEBUG_LOG_ENABLED="0"
-WEBUI_REFRESH_INTERVAL="8"
-LAST_SYNC_TS="0"
 
 DEFAULT_PACKAGES='
 com.tencent.tmgp.sgame
@@ -89,9 +81,6 @@ migrate_legacy_config() {
         if [ -f "$LEGACY_DEBUG_FLAG_FILE" ]; then
             DEBUG_LOG_ENABLED="1"
         fi
-        if [ -f "$LEGACY_REFRESH_INTERVAL_FILE" ]; then
-            WEBUI_REFRESH_INTERVAL=$(normalize_refresh_interval "$(cat "$LEGACY_REFRESH_INTERVAL_FILE" 2>/dev/null)")
-        fi
     fi
 }
 
@@ -111,7 +100,48 @@ service_alive() {
 
     service_pid=$(cat "$PID_FILE" 2>/dev/null)
     [ -n "$service_pid" ] || return 1
-    [ -d "/proc/$service_pid" ]
+    [ -d "/proc/$service_pid" ] || return 1
+
+    cmdline=$(tr '\0' ' ' < "/proc/$service_pid/cmdline" 2>/dev/null)
+    case "$cmdline" in
+        *"$SERVICE_SCRIPT"*) return 0 ;;
+        *oplus_smart_dimming*/service.sh*) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+start_service_detached() {
+    rm -f "$PID_FILE"
+
+    if command -v setsid >/dev/null 2>&1 && command -v nohup >/dev/null 2>&1; then
+        setsid nohup sh "$SERVICE_SCRIPT" </dev/null >/dev/null 2>&1 &
+    elif command -v nohup >/dev/null 2>&1; then
+        nohup sh "$SERVICE_SCRIPT" </dev/null >/dev/null 2>&1 &
+    else
+        sh "$SERVICE_SCRIPT" >/dev/null 2>&1 &
+    fi
+
+    sleep 2
+    service_alive
+}
+
+stop_running_service() {
+    if ! service_alive; then
+        return 0
+    fi
+
+    service_pid=$(cat "$PID_FILE" 2>/dev/null)
+    [ -n "$service_pid" ] || return 0
+
+    kill "$service_pid" 2>/dev/null
+    sleep 1
+
+    if [ -d "/proc/$service_pid" ]; then
+        kill -TERM "$service_pid" 2>/dev/null
+        sleep 1
+    fi
+
+    rm -f "$PID_FILE"
 }
 
 ensure_service_running() {
@@ -119,10 +149,12 @@ ensure_service_running() {
         return 0
     fi
 
-    rm -f "$PID_FILE"
-    sh "$SERVICE_SCRIPT" >/dev/null 2>&1 &
-    sleep 2
-    service_alive
+    start_service_detached
+}
+
+restart_service() {
+    stop_running_service
+    start_service_detached
 }
 
 load_debug_config() {
@@ -173,34 +205,6 @@ set_debug_logging() {
     write_settings_file
 }
 
-normalize_refresh_interval() {
-    interval="$1"
-    case "$interval" in
-        ''|*[!0-9]*) interval="8" ;;
-    esac
-
-    if [ "$interval" -lt 1 ] 2>/dev/null; then
-        interval="1"
-    fi
-    if [ "$interval" -gt 10 ] 2>/dev/null; then
-        interval="10"
-    fi
-
-    printf '%s\n' "$interval"
-}
-
-load_refresh_interval() {
-    ensure_config_file
-
-    WEBUI_REFRESH_INTERVAL=$(normalize_refresh_interval "$(read_prop_value "refresh_interval" "8")")
-}
-
-set_refresh_interval() {
-    ensure_config_file
-    WEBUI_REFRESH_INTERVAL=$(normalize_refresh_interval "$1")
-    write_settings_file
-}
-
 read_prop_value() {
     key="$1"
     default_value="$2"
@@ -228,7 +232,6 @@ write_settings_file() {
     {
         echo "# 欧加真智能调光 - WebUI 设置"
         echo "debug_logging=$DEBUG_LOG_ENABLED"
-        echo "refresh_interval=$WEBUI_REFRESH_INTERVAL"
     } > "$SETTINGS_FILE"
 }
 
@@ -243,7 +246,9 @@ package_is_selected() {
 }
 
 is_screen_on() {
+    dumpsys power 2>/dev/null | grep -q 'mWakefulness=Awake' && return 0
     dumpsys power 2>/dev/null | grep -q 'Display Power: state=ON' && return 0
+    dumpsys display 2>/dev/null | grep -q 'Display State=ON' && return 0
     dumpsys window 2>/dev/null | grep -q 'mScreenOn=true'
 }
 
@@ -251,13 +256,6 @@ extract_component_package() {
     sed -n 's/.* \([A-Za-z0-9._$][A-Za-z0-9._$]*\/[.A-Za-z0-9_$][.A-Za-z0-9_$]*\).*/\1/p' \
         | head -n 1 \
         | cut -d/ -f1
-}
-
-extract_event_package() {
-    line="$1"
-    printf '%s\n' "$line" \
-        | sed -n 's/.*\([A-Za-z0-9_][A-Za-z0-9_]*\(\.[A-Za-z0-9_][A-Za-z0-9_]*\)\{1,\}\)\/[.A-Za-z0-9_$][.A-Za-z0-9_$]*/\1/p' \
-        | head -n 1
 }
 
 get_top_package() {
@@ -284,29 +282,6 @@ read_current_state() {
     esac
 }
 
-current_timestamp() {
-    ts=$(date '+%s' 2>/dev/null)
-    case "$ts" in
-        ''|*[!0-9]*) ts=0 ;;
-    esac
-    printf '%s\n' "$ts"
-}
-
-sync_allowed() {
-    now_ts=$(current_timestamp)
-
-    case "$LAST_SYNC_TS" in
-        ''|*[!0-9]*) LAST_SYNC_TS=0 ;;
-    esac
-
-    if [ $((now_ts - LAST_SYNC_TS)) -lt "$MIN_SYNC_INTERVAL" ] 2>/dev/null; then
-        return 1
-    fi
-
-    LAST_SYNC_TS="$now_ts"
-    return 0
-}
-
 write_state_file() {
     if [ "$LAST_WRITTEN_STATE" = "$CURRENT_STATE" ] && [ "$LAST_WRITTEN_PACKAGE" = "$CURRENT_PACKAGE" ]; then
         return 0
@@ -327,12 +302,11 @@ apply_target_state() {
     target="$1"
     [ -n "$target" ] || return 1
 
+    CURRENT_STATE=$(read_current_state)
     if [ "$CURRENT_STATE" != "$target" ]; then
         settings put secure "$SETTING_KEY" "$target"
         log_debug "switch state: package=$CURRENT_PACKAGE target=$target previous=$CURRENT_STATE"
         CURRENT_STATE="$target"
-    else
-        log_debug "keep state: package=$CURRENT_PACKAGE target=$target"
     fi
 
     write_state_file
@@ -346,36 +320,6 @@ compute_target_state() {
     else
         printf '%s\n' "$DEFAULT_STATE"
     fi
-}
-
-sync_state_from_foreground() {
-    if ! is_screen_on; then
-        log_debug "skip sync: screen off"
-        return 0
-    fi
-
-    CURRENT_PACKAGE=$(get_top_package)
-    log_debug "foreground query: package=$CURRENT_PACKAGE"
-    apply_target_state "$(compute_target_state "$CURRENT_PACKAGE")"
-}
-
-sync_state_for_package() {
-    pkg="$1"
-
-    if ! is_screen_on; then
-        log_debug "skip event package=$pkg: screen off"
-        return 0
-    fi
-
-    if [ -z "$pkg" ]; then
-        log_debug "event without package: fallback foreground query"
-        sync_state_from_foreground
-        return $?
-    fi
-
-    CURRENT_PACKAGE="$pkg"
-    log_debug "foreground event: package=$CURRENT_PACKAGE"
-    apply_target_state "$(compute_target_state "$CURRENT_PACKAGE")"
 }
 
 save_packages_from_stream() {
@@ -405,11 +349,5 @@ reload_running_service() {
 }
 
 stop_background_helpers() {
-    for pid_file in "$WATCHDOG_PID_FILE" "$LOGCAT_PID_FILE"; do
-        if [ -f "$pid_file" ]; then
-            helper_pid=$(cat "$pid_file" 2>/dev/null)
-            [ -n "$helper_pid" ] && kill "$helper_pid" 2>/dev/null
-            rm -f "$pid_file"
-        fi
-    done
+    :
 }
