@@ -106,7 +106,7 @@
       border: 1px solid var(--line-soft);
       border-radius: 18px;
       padding: 14px 15px;
-      min-height: 78px;
+      min-height: 64px;
     }
     .status-title {
       display: block;
@@ -144,7 +144,7 @@
     }
     .toolbar {
       display: grid;
-      grid-template-columns: 1.4fr auto auto;
+      grid-template-columns: 1.3fr auto auto auto;
       gap: 10px;
       margin-bottom: 12px;
       align-items: center;
@@ -241,7 +241,6 @@
       overflow-wrap: anywhere;
       word-break: break-word;
     }
-    #logPath,
     #logPathInDebug {
       display: inline;
       overflow-wrap: anywhere;
@@ -255,9 +254,26 @@
       .hero {
         border-radius: 18px;
       }
-      .status-grid,
       .toolbar {
         grid-template-columns: 1fr;
+      }
+      .status-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .status-box {
+        border-radius: 14px;
+        min-height: 0;
+        padding: 10px 8px;
+      }
+      .status-title {
+        margin-bottom: 4px;
+        font-size: 11px;
+      }
+      .status-value {
+        font-size: 15px;
+        line-height: 1.25;
       }
       button {
         width: 100%;
@@ -294,9 +310,7 @@
       </div>
       <div class="actions">
         <button id="refreshStateBtn" type="button">刷新状态</button>
-        <button id="loadAppsBtn" class="secondary" type="button">加载第三方应用</button>
       </div>
-      <p class="muted">日志路径：<span id="logPath">读取中</span></p>
       <div id="notice" class="notice"></div>
     </div>
 
@@ -307,9 +321,10 @@
       </div>
       <div class="tip-box">勾选应用后保存即可。当前后台轮询间隔固定为 3 秒，这个参数先保持稳定，不开放给普通用户修改。</div>
       <div class="toolbar">
-        <input id="searchInput" type="text" placeholder="搜索包名">
-        <button id="saveBtn" type="button">保存并立即生效</button>
+        <input id="searchInput" type="text" placeholder="搜索应用名或包名">
+        <button id="loadAppsBtn" class="secondary" type="button">加载第三方应用</button>
         <button id="reloadBtn" class="secondary" type="button">刷新配置显示</button>
+        <button id="saveBtn" type="button">保存并立即生效</button>
       </div>
       <div id="appsList" class="apps">尚未加载应用列表。</div>
       <div class="row" style="margin-top:12px;">
@@ -362,7 +377,6 @@
       serviceState: document.getElementById("serviceState"),
       currentState: document.getElementById("currentState"),
       debugState: document.getElementById("debugState"),
-      logPath: document.getElementById("logPath"),
       notice: document.getElementById("notice"),
       searchInput: document.getElementById("searchInput"),
       appsList: document.getElementById("appsList"),
@@ -438,7 +452,6 @@
       appState.debugEnabled = stateData.debug === "1";
       els.debugState.textContent = appState.debugEnabled ? "开启" : "关闭";
       els.debugToggle.checked = appState.debugEnabled;
-      els.logPath.textContent = stateData.log || "未知";
       els.logPathInDebug.textContent = stateData.log || "未知";
       restartTimer();
     }
@@ -459,13 +472,16 @@
       let i;
       for (i = 0; i < appState.apps.length; i += 1) {
         const pkg = appState.apps[i].packageName;
-        if (keyword && pkg.toLowerCase().indexOf(keyword) === -1) {
+        const label = String(appState.apps[i].appLabel || "");
+        if (keyword &&
+            pkg.toLowerCase().indexOf(keyword) === -1 &&
+            label.toLowerCase().indexOf(keyword) === -1) {
           continue;
         }
         visibleCount += 1;
         html += '<label class="app-item"><input type="checkbox" data-pkg="' + pkg + '"' +
           (appState.selectedMap[pkg] ? " checked" : "") +
-          "> " + escapeHtml(appState.apps[i].appLabel || pkg) +
+          "> " + escapeHtml(label || pkg) +
           '<br><span class="muted">' + escapeHtml(pkg) + "</span></label>";
       }
 
