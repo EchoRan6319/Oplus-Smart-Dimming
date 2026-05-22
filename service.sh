@@ -3,6 +3,14 @@
 MODDIR=${0%/*}
 . "$MODDIR/scripts/common.sh"
 
+if [ -f "$PID_FILE" ]; then
+    existing_pid=$(cat "$PID_FILE" 2>/dev/null)
+    if [ -n "$existing_pid" ] && [ "$existing_pid" != "$$" ] && [ -d "/proc/$existing_pid" ]; then
+        log_boot "service already running: pid=$existing_pid, skip duplicate pid=$$"
+        exit 0
+    fi
+fi
+
 echo $$ > "$PID_FILE"
 log_boot "service process created: pid=$$ moddir=$MODDIR"
 
@@ -12,7 +20,8 @@ cleanup() {
     log_boot "service stopped"
 }
 
-trap 'cleanup; exit 0' INT TERM EXIT
+trap 'cleanup; exit 0' INT TERM
+trap 'cleanup' EXIT
 
 wait_for_boot
 log_boot "boot completed and shared storage is ready"
@@ -31,9 +40,7 @@ handle_reload() {
     load_selected_packages
     load_debug_config
     log_debug "config reloaded: selected_count=$(printf '%s\n' "$SELECTED_PACKAGES" | sed '/^$/d' | wc -l | tr -d ' ')"
-    if [ -p "$FIFO_FILE" ]; then
-        printf '%s\n' "reload" > "$FIFO_FILE"
-    fi
+    sync_state_from_foreground
 }
 
 trap 'handle_reload' USR1
@@ -44,7 +51,7 @@ start_logcat_listener() {
             logcat -b events -T 1 -v brief 2>/dev/null \
                 | while IFS= read -r line; do
                     case "$line" in
-                        *wm_on_resume_called*|*am_on_resume_called*|*wm_on_top_resumed_gained_called*|*am_focused_activity*|*wm_task_moved*|*wm_task_to_front*)
+                        *wm_on_top_resumed_gained_called*|*am_focused_activity*)
                             event_pkg=$(extract_event_package "$line")
                             if [ -n "$event_pkg" ]; then
                                 printf 'focus:%s\n' "$event_pkg" > "$FIFO_FILE"
@@ -78,10 +85,23 @@ while IFS= read -r event
 do
     case "$event" in
         focus:*)
-            sync_state_for_package "${event#focus:}"
+            event_pkg=${event#focus:}
+            if [ "$event_pkg" = "$CURRENT_PACKAGE" ]; then
+                log_debug "skip duplicate focus event: package=$event_pkg"
+                continue
+            fi
+            if sync_allowed; then
+                sync_state_for_package "$event_pkg"
+            else
+                log_debug "skip throttled focus event: package=$event_pkg"
+            fi
             ;;
         focus|poll|reload)
-            sync_state_from_foreground
+            if sync_allowed; then
+                sync_state_from_foreground
+            else
+                log_debug "skip throttled event: type=$event"
+            fi
             ;;
     esac
 done < "$FIFO_FILE"

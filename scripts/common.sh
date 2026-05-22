@@ -23,10 +23,12 @@ SETTING_KEY="display_single_pulse_eyeprotection_switch"
 DEFAULT_STATE="2"
 CLASSIC_STATE="0"
 WATCHDOG_INTERVAL="60"
+MIN_SYNC_INTERVAL="2"
 LAST_WRITTEN_STATE=""
 LAST_WRITTEN_PACKAGE=""
 DEBUG_LOG_ENABLED="0"
 WEBUI_REFRESH_INTERVAL="8"
+LAST_SYNC_TS="0"
 
 DEFAULT_PACKAGES='
 com.tencent.tmgp.sgame
@@ -260,6 +262,29 @@ read_current_state() {
         0|1|2) printf '%s\n' "$current" ;;
         *) printf '%s\n' "-1" ;;
     esac
+}
+
+current_timestamp() {
+    ts=$(date '+%s' 2>/dev/null)
+    case "$ts" in
+        ''|*[!0-9]*) ts=0 ;;
+    esac
+    printf '%s\n' "$ts"
+}
+
+sync_allowed() {
+    now_ts=$(current_timestamp)
+
+    case "$LAST_SYNC_TS" in
+        ''|*[!0-9]*) LAST_SYNC_TS=0 ;;
+    esac
+
+    if [ $((now_ts - LAST_SYNC_TS)) -lt "$MIN_SYNC_INTERVAL" ] 2>/dev/null; then
+        return 1
+    fi
+
+    LAST_SYNC_TS="$now_ts"
+    return 0
 }
 
 write_state_file() {

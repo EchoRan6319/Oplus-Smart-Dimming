@@ -11,13 +11,7 @@ pm list packages -3 2>/dev/null \
     | while IFS= read -r pkg; do
         [ -n "$pkg" ] || continue
 
-        label=$(
-            pm dump "$pkg" 2>/dev/null \
-                | sed -n "s/.*application-label:'\\(.*\\)'.*/\\1/p" \
-                | head -n 1
-        )
-
-        [ -n "$label" ] || label="$pkg"
+        label="$pkg"
         label=$(printf '%s' "$label" | tr '\t' ' ' | tr '\r' ' ')
 
         selected=0

@@ -2,6 +2,6 @@ id=oplus_smart_dimming
 name=欧加真智能调光
 version=v3.0
 versionCode=3
-author=辞晚（酷安：戶晨風_Official）
+author=二词元Token（酷安：戶晨風_Official）
 description=为一加 15/欧加系 ColorOS 低频闪策略补全应用级自动切换：日常保持全亮度低频闪，进入 WebUI 勾选的不兼容或高刷应用时临时切到经典低频闪，退出后自动恢复，解决系统在 144Hz 等场景切到经典模式后不会自动切回全亮度低频闪的问题；支持 WebUI 勾选应用、保存即生效和模块执行按钮热重载。
 webui=true
