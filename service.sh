@@ -34,11 +34,13 @@ CURRENT_PACKAGE=""
 
 rm -f "$FIFO_FILE"
 mkfifo "$FIFO_FILE"
+log_boot "service initialized: current_state=$CURRENT_STATE"
 log_debug "service started: pid=$$"
 
 handle_reload() {
     load_selected_packages
     load_debug_config
+    log_boot "service reload requested"
     log_debug "config reloaded: selected_count=$(printf '%s\n' "$SELECTED_PACKAGES" | sed '/^$/d' | wc -l | tr -d ' ')"
     sync_state_from_foreground
 }
@@ -65,6 +67,7 @@ start_logcat_listener() {
         done
     ) &
     echo $! > "$LOGCAT_PID_FILE"
+    log_boot "logcat listener started: pid=$(cat "$LOGCAT_PID_FILE" 2>/dev/null)"
 }
 
 start_watchdog() {
@@ -75,6 +78,7 @@ start_watchdog() {
         done
     ) &
     echo $! > "$WATCHDOG_PID_FILE"
+    log_boot "watchdog started: pid=$(cat "$WATCHDOG_PID_FILE" 2>/dev/null) interval=${WATCHDOG_INTERVAL}s"
 }
 
 sync_state_from_foreground
@@ -86,17 +90,15 @@ do
     case "$event" in
         focus:*)
             event_pkg=${event#focus:}
+            log_debug "event received: type=focus package=$event_pkg"
             if [ "$event_pkg" = "$CURRENT_PACKAGE" ]; then
                 log_debug "skip duplicate focus event: package=$event_pkg"
                 continue
             fi
-            if sync_allowed; then
-                sync_state_for_package "$event_pkg"
-            else
-                log_debug "skip throttled focus event: package=$event_pkg"
-            fi
+            sync_state_for_package "$event_pkg"
             ;;
         focus|poll|reload)
+            log_debug "event received: type=$event"
             if sync_allowed; then
                 sync_state_from_foreground
             else

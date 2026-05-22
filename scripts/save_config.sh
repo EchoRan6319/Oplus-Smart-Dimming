@@ -23,8 +23,13 @@ fi
 save_packages_from_stream < "$tmp_file"
 rm -f "$tmp_file"
 
-if reload_running_service; then
-    echo "OK: saved and reloaded"
+if ensure_service_running; then
+    if reload_running_service; then
+        echo "OK: saved and reloaded"
+    else
+        echo "OK: saved, service started"
+    fi
 else
-    echo "OK: saved, service not running"
+    echo "ERROR: saved, but service failed to start"
+    exit 1
 fi

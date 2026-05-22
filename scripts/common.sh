@@ -4,6 +4,7 @@ MODULE_DIR=${0%/*}
 case "$MODULE_DIR" in
     */scripts) MODULE_DIR=${MODULE_DIR%/scripts} ;;
 esac
+SERVICE_SCRIPT="$MODULE_DIR/service.sh"
 
 CONFIG_DIR="/storage/emulated/0/Documents/Oplus_Smart_Dimming"
 CONFIG_FILE="$CONFIG_DIR/packages.conf"
@@ -22,7 +23,7 @@ BOOT_LOG_FILE="/data/local/tmp/oplus_smart_dimming.boot.log"
 SETTING_KEY="display_single_pulse_eyeprotection_switch"
 DEFAULT_STATE="2"
 CLASSIC_STATE="0"
-WATCHDOG_INTERVAL="60"
+WATCHDOG_INTERVAL="15"
 MIN_SYNC_INTERVAL="2"
 LAST_WRITTEN_STATE=""
 LAST_WRITTEN_PACKAGE=""
@@ -103,6 +104,25 @@ normalize_package_stream() {
 load_selected_packages() {
     ensure_config_file
     SELECTED_PACKAGES=$(normalize_package_stream < "$CONFIG_FILE")
+}
+
+service_alive() {
+    [ -f "$PID_FILE" ] || return 1
+
+    service_pid=$(cat "$PID_FILE" 2>/dev/null)
+    [ -n "$service_pid" ] || return 1
+    [ -d "/proc/$service_pid" ]
+}
+
+ensure_service_running() {
+    if service_alive; then
+        return 0
+    fi
+
+    rm -f "$PID_FILE"
+    sh "$SERVICE_SCRIPT" >/dev/null 2>&1 &
+    sleep 2
+    service_alive
 }
 
 load_debug_config() {
@@ -376,14 +396,11 @@ save_packages_from_stream() {
 }
 
 reload_running_service() {
-    if [ ! -f "$PID_FILE" ]; then
+    if ! service_alive; then
         return 1
     fi
 
     service_pid=$(cat "$PID_FILE" 2>/dev/null)
-    [ -n "$service_pid" ] || return 1
-    [ -d "/proc/$service_pid" ] || return 1
-
     kill -USR1 "$service_pid"
 }
 
