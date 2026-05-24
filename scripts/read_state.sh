@@ -20,3 +20,7 @@ printf 'count=%s\n' "$(printf '%s\n' "$SELECTED_PACKAGES" | sed '/^$/d' | wc -l 
 printf 'config=%s\n' "$CONFIG_FILE"
 printf 'debug=%s\n' "$DEBUG_LOG_ENABLED"
 printf 'log=%s\n' "$DEBUG_LOG_FILE"
+
+if [ -f "$STATE_FILE" ]; then
+    grep -E '^(top_package|runtime_mode|screen_on|app_monitor|note|last_update)=' "$STATE_FILE" 2>/dev/null
+fi

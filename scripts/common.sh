@@ -5,6 +5,7 @@ case "$MODULE_DIR" in
     */scripts) MODULE_DIR=${MODULE_DIR%/scripts} ;;
 esac
 SERVICE_SCRIPT="$MODULE_DIR/service.sh"
+DAEMON_BIN="$MODULE_DIR/bin/oplus_smart_dimmingd"
 
 CONFIG_DIR="/storage/emulated/0/Documents/Oplus_Smart_Dimming"
 CONFIG_FILE="$CONFIG_DIR/packages.conf"
@@ -105,7 +106,9 @@ service_alive() {
     cmdline=$(tr '\0' ' ' < "/proc/$service_pid/cmdline" 2>/dev/null)
     case "$cmdline" in
         *"$SERVICE_SCRIPT"*) return 0 ;;
+        *"$DAEMON_BIN"*) return 0 ;;
         *oplus_smart_dimming*/service.sh*) return 0 ;;
+        *oplus_smart_dimmingd*) return 0 ;;
         *) return 1 ;;
     esac
 }

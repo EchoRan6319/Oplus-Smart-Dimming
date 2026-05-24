@@ -21,13 +21,52 @@
       --error-bg: #ffe8e8;
       --error-text: #a12f2f;
       --shadow: rgba(119, 78, 34, 0.12);
+      --body-grad-a: #ffd8b8;
+      --body-grad-b: #f6f1e8;
+      --body-grad-c: #efe4d6;
+      --input-bg: #fffdfa;
+      --apps-bg: #fffaf4;
+      --tip-bg: #f9efe5;
+      --debug-bg: #fffaf4;
+      --hero-mark: #f0dcc9;
+      --focus-ring: rgba(191, 107, 63, 0.12);
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16110d;
+        --paper: #211a15;
+        --paper-strong: #2b221b;
+        --line: #4c3c30;
+        --line-soft: #3a2e25;
+        --text: #f5eadf;
+        --muted: #c2af9b;
+        --accent: #df8c5b;
+        --accent-dark: #b76c42;
+        --accent-soft: #3d2b22;
+        --ok-bg: #173224;
+        --ok-text: #9ee1b9;
+        --error-bg: #402122;
+        --error-text: #ffb0b0;
+        --shadow: rgba(0, 0, 0, 0.32);
+        --body-grad-a: #5a3722;
+        --body-grad-b: #18120e;
+        --body-grad-c: #100c09;
+        --input-bg: #1b1511;
+        --apps-bg: #19130f;
+        --tip-bg: #241b15;
+        --debug-bg: #19130f;
+        --hero-mark: #3f2e24;
+        --focus-ring: rgba(223, 140, 91, 0.18);
+        color-scheme: dark;
+      }
     }
     body {
       margin: 0;
       padding: 18px;
       background:
-        radial-gradient(circle at top right, #ffd8b8 0, rgba(255, 216, 184, 0) 28%),
-        linear-gradient(180deg, #f6f1e8 0%, #efe4d6 100%);
+        radial-gradient(circle at top right, var(--body-grad-a) 0, rgba(255, 216, 184, 0) 28%),
+        linear-gradient(180deg, var(--body-grad-b) 0%, var(--body-grad-c) 100%);
       color: var(--text);
       font-family: "Microsoft YaHei UI", sans-serif;
       font-size: 14px;
@@ -58,7 +97,7 @@
       font-size: 30px;
       font-weight: 800;
       letter-spacing: 0.14em;
-      color: #f0dcc9;
+      color: var(--hero-mark);
       z-index: -1;
       pointer-events: none;
       white-space: nowrap;
@@ -101,6 +140,10 @@
       position: relative;
       z-index: 1;
     }
+    .status-grid.detail {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 12px;
+    }
     .status-box {
       background: var(--paper-strong);
       border: 1px solid var(--line-soft);
@@ -119,6 +162,94 @@
       font-weight: 700;
       word-break: break-all;
     }
+    .status-value.compact {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .debug-panel {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid var(--line-soft);
+      background: var(--debug-bg);
+    }
+    .debug-panel h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+    .debug-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .debug-panel-toggle {
+      color: var(--accent-dark);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .debug-panel-body {
+      margin-top: 12px;
+      display: none;
+    }
+    .debug-panel.expanded .debug-panel-body {
+      display: block;
+    }
+    .debug-lines {
+      display: grid;
+      gap: 8px;
+    }
+    .debug-tags {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .debug-tag {
+      border: 1px solid var(--line-soft);
+      border-radius: 14px;
+      padding: 10px 11px;
+      background: var(--paper-strong);
+      min-height: 54px;
+    }
+    .debug-tag-title {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .debug-tag-value {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+    .debug-tag-value.mono {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .debug-line {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .debug-key {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .debug-value {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 12px;
+      color: var(--text);
+    }
     input[type="text"],
     input[type="number"],
     textarea {
@@ -128,7 +259,7 @@
       border-radius: 14px;
       padding: 11px 12px;
       font: inherit;
-      background: #fffdfa;
+      background: var(--input-bg);
       color: var(--text);
     }
     textarea {
@@ -140,7 +271,7 @@
     textarea:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(191, 107, 63, 0.12);
+      box-shadow: 0 0 0 3px var(--focus-ring);
     }
     .toolbar {
       display: grid;
@@ -199,7 +330,7 @@
       border: 1px solid var(--line-soft);
       border-radius: 16px;
       padding: 10px;
-      background: #fffaf4;
+      background: var(--apps-bg);
     }
     .app-item {
       display: block;
@@ -236,7 +367,7 @@
       margin-bottom: 12px;
       padding: 12px 14px;
       border-radius: 14px;
-      background: #f9efe5;
+      background: var(--tip-bg);
       color: var(--muted);
       overflow-wrap: anywhere;
       word-break: break-word;
@@ -262,6 +393,9 @@
         gap: 8px;
         margin-top: 12px;
       }
+      .status-grid.detail {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
       .status-box {
         border-radius: 14px;
         min-height: 0;
@@ -274,6 +408,16 @@
       .status-value {
         font-size: 15px;
         line-height: 1.25;
+      }
+      .status-value.compact {
+        font-size: 13px;
+      }
+      .debug-line {
+        grid-template-columns: 1fr;
+        gap: 2px;
+      }
+      .debug-tags {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       button {
         width: 100%;
@@ -293,7 +437,7 @@
   <div class="wrap">
     <div class="card hero">
       <h1>欧加真智能调光</h1>
-      <p class="lead">默认保持全亮度低频闪，进入你选中的应用时切到经典低频闪，退出后自动恢复。当前版本走稳定优先的轮询方案，避免后台服务崩掉。</p>
+      <p class="lead">默认保持全亮度低频闪；进入名单应用时临时切到经典低频闪，退出后自动恢复。</p>
       <div class="status-grid">
         <div class="status-box">
           <span class="status-title">服务状态</span>
@@ -308,6 +452,84 @@
           <span id="debugState" class="status-value">读取中</span>
         </div>
       </div>
+      <div class="status-grid detail">
+        <div class="status-box">
+          <span class="status-title">运行模式</span>
+          <span id="runtimeMode" class="status-value compact">读取中</span>
+        </div>
+        <div class="status-box">
+          <span class="status-title">屏幕状态</span>
+          <span id="screenState" class="status-value compact">读取中</span>
+        </div>
+        <div class="status-box">
+          <span class="status-title">前台应用</span>
+          <span id="topPackage" class="status-value compact">读取中</span>
+        </div>
+        <div class="status-box">
+          <span class="status-title">最近动作</span>
+          <span id="runtimeNote" class="status-value compact">读取中</span>
+        </div>
+      </div>
+      <div id="debugPanel" class="debug-panel">
+        <div id="debugPanelHead" class="debug-panel-head" role="button" tabindex="0" aria-expanded="false">
+          <h3>运行诊断</h3>
+          <span id="debugPanelToggle" class="debug-panel-toggle">展开</span>
+        </div>
+        <div id="debugPanelBody" class="debug-panel-body" style="display:none;">
+        <div class="debug-tags">
+          <div class="debug-tag">
+            <span class="debug-tag-title">事件驱动</span>
+            <span id="diagEventDriven" class="debug-tag-value">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">强制回退</span>
+            <span id="diagFallbackForced" class="debug-tag-value">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">监听数量</span>
+            <span id="diagWatchCount" class="debug-tag-value">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">事件次数</span>
+            <span id="diagInotifyEvents" class="debug-tag-value">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">回退轮询</span>
+            <span id="diagFallbackPolls" class="debug-tag-value">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">解析失败</span>
+            <span id="diagResolveFailures" class="debug-tag-value">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">最近来源</span>
+            <span id="diagLastSource" class="debug-tag-value mono">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">最近包名</span>
+            <span id="diagLastPackage" class="debug-tag-value mono">读取中</span>
+          </div>
+          <div class="debug-tag">
+            <span class="debug-tag-title">最近失败</span>
+            <span id="diagLastFailure" class="debug-tag-value mono">读取中</span>
+          </div>
+        </div>
+        <div class="debug-lines">
+          <div class="debug-line">
+            <span class="debug-key">监听路径</span>
+            <span id="diagWatchedPaths" class="debug-value">读取中</span>
+          </div>
+          <div class="debug-line">
+            <span class="debug-key">监控摘要</span>
+            <span id="appMonitorSummary" class="debug-value">读取中</span>
+          </div>
+          <div class="debug-line">
+            <span class="debug-key">最近更新</span>
+            <span id="lastUpdate" class="debug-value">读取中</span>
+          </div>
+        </div>
+        </div>
+      </div>
       <div class="actions">
         <button id="refreshStateBtn" type="button">刷新状态</button>
       </div>
@@ -319,7 +541,11 @@
         <h2>应用名单</h2>
         <p class="muted">只加载第三方应用，不扫系统应用。</p>
       </div>
-      <div class="tip-box">勾选应用后保存即可。当前后台轮询间隔固定为 3 秒，这个参数先保持稳定，不开放给普通用户修改。</div>
+      <div class="tip-box">
+        只把“确实需要兼容”的应用加入名单，例如游戏、高刷应用，或你肉眼觉得显示观感不舒服的应用。
+        <br>默认尽量保持全亮度低频闪；名单里的应用在前台时会临时切到经典低频闪，退出后自动恢复。
+        <br>不建议全选，按需添加即可。
+      </div>
       <div class="toolbar">
         <input id="searchInput" type="text" placeholder="搜索应用名或包名">
         <button id="loadAppsBtn" class="secondary" type="button">加载第三方应用</button>
@@ -336,12 +562,13 @@
       <div class="panel-head">
         <div>
           <h2>调试与日志</h2>
-          <p class="muted">WebUI 状态每 3 秒刷新一次，和后台轮询保持一致。</p>
+          <p class="muted">WebUI 状态每 5 秒刷新一次；后台调光由原生守护进程事件驱动处理。</p>
         </div>
         <label class="switch-line"><input id="debugToggle" type="checkbox"> 开启调试日志</label>
       </div>
       <div class="tip-box">日志文件保存在 <span id="logPathInDebug">读取中</span>。需要查看详细记录时，请到文件管理器中打开这个文件。</div>
       <div class="actions">
+        <button id="restartServiceBtn" class="secondary" type="button">重启服务</button>
         <button id="clearLogBtn" class="secondary" type="button">清空日志</button>
       </div>
     </div>
@@ -377,6 +604,26 @@
       serviceState: document.getElementById("serviceState"),
       currentState: document.getElementById("currentState"),
       debugState: document.getElementById("debugState"),
+      runtimeMode: document.getElementById("runtimeMode"),
+      screenState: document.getElementById("screenState"),
+      topPackage: document.getElementById("topPackage"),
+      runtimeNote: document.getElementById("runtimeNote"),
+      appMonitorSummary: document.getElementById("appMonitorSummary"),
+      lastUpdate: document.getElementById("lastUpdate"),
+      debugPanel: document.getElementById("debugPanel"),
+      debugPanelHead: document.getElementById("debugPanelHead"),
+      debugPanelBody: document.getElementById("debugPanelBody"),
+      debugPanelToggle: document.getElementById("debugPanelToggle"),
+      diagEventDriven: document.getElementById("diagEventDriven"),
+      diagFallbackForced: document.getElementById("diagFallbackForced"),
+      diagWatchCount: document.getElementById("diagWatchCount"),
+      diagInotifyEvents: document.getElementById("diagInotifyEvents"),
+      diagFallbackPolls: document.getElementById("diagFallbackPolls"),
+      diagResolveFailures: document.getElementById("diagResolveFailures"),
+      diagLastSource: document.getElementById("diagLastSource"),
+      diagLastPackage: document.getElementById("diagLastPackage"),
+      diagLastFailure: document.getElementById("diagLastFailure"),
+      diagWatchedPaths: document.getElementById("diagWatchedPaths"),
       notice: document.getElementById("notice"),
       searchInput: document.getElementById("searchInput"),
       appsList: document.getElementById("appsList"),
@@ -385,6 +632,7 @@
       reloadBtn: document.getElementById("reloadBtn"),
       refreshStateBtn: document.getElementById("refreshStateBtn"),
       loadAppsBtn: document.getElementById("loadAppsBtn"),
+      restartServiceBtn: document.getElementById("restartServiceBtn"),
       clearLogBtn: document.getElementById("clearLogBtn"),
       debugToggle: document.getElementById("debugToggle"),
       logPathInDebug: document.getElementById("logPathInDebug")
@@ -401,6 +649,7 @@
       els.reloadBtn.disabled = disabled;
       els.refreshStateBtn.disabled = disabled;
       els.loadAppsBtn.disabled = disabled;
+      els.restartServiceBtn.disabled = disabled;
       els.clearLogBtn.disabled = disabled;
       els.debugToggle.disabled = disabled;
     }
@@ -446,11 +695,74 @@
       return result;
     }
 
+    function parseAppMonitorSummary(summaryText) {
+      const text = String(summaryText || "");
+      const info = {};
+      const watchedMatch = text.match(/watched=\[(.*)\]/);
+      const failureMatch = text.match(/last_failure="([^"]*)"/);
+
+      if (watchedMatch) {
+        info.watched = watchedMatch[1];
+      }
+      if (failureMatch) {
+        info.last_failure = failureMatch[1];
+      }
+
+      text.replace(/([a-z_]+)=([^\s"]+)/g, function(_, key, value) {
+        info[key] = value;
+        return _;
+      });
+
+      return info;
+    }
+
+    function boolText(value) {
+      if (value === "1") {
+        return "是";
+      }
+      if (value === "0") {
+        return "否";
+      }
+      return "未知";
+    }
+
+    function setDebugPanelExpanded(expanded) {
+      if (expanded) {
+        els.debugPanel.classList.add("expanded");
+        els.debugPanelHead.setAttribute("aria-expanded", "true");
+        els.debugPanelToggle.textContent = "收起";
+        els.debugPanelBody.style.display = "block";
+      } else {
+        els.debugPanel.classList.remove("expanded");
+        els.debugPanelHead.setAttribute("aria-expanded", "false");
+        els.debugPanelToggle.textContent = "展开";
+        els.debugPanelBody.style.display = "none";
+      }
+    }
+
     function applyState(stateData) {
+      const monitorInfo = parseAppMonitorSummary(stateData.app_monitor);
+
       els.serviceState.textContent = stateData.service || "未知";
       els.currentState.textContent = stateData.state || "未知";
       appState.debugEnabled = stateData.debug === "1";
       els.debugState.textContent = appState.debugEnabled ? "开启" : "关闭";
+      els.runtimeMode.textContent = stateData.runtime_mode || "未知";
+      els.screenState.textContent = stateData.screen_on === "1" ? "亮屏" : (stateData.screen_on === "0" ? "熄屏" : "未知");
+      els.topPackage.textContent = stateData.top_package || "未知";
+      els.runtimeNote.textContent = stateData.note || "无";
+      els.appMonitorSummary.textContent = stateData.app_monitor || "暂无";
+      els.lastUpdate.textContent = stateData.last_update || "未知";
+      els.diagEventDriven.textContent = boolText(monitorInfo.event);
+      els.diagFallbackForced.textContent = boolText(monitorInfo.fallback_forced);
+      els.diagWatchCount.textContent = monitorInfo.watches || "0";
+      els.diagInotifyEvents.textContent = monitorInfo.inotify_events || "0";
+      els.diagFallbackPolls.textContent = monitorInfo.fallback_polls || "0";
+      els.diagResolveFailures.textContent = monitorInfo.resolve_failures || "0";
+      els.diagLastSource.textContent = monitorInfo.last_source || "无";
+      els.diagLastPackage.textContent = monitorInfo.last_pkg || "无";
+      els.diagLastFailure.textContent = monitorInfo.last_failure || "无";
+      els.diagWatchedPaths.textContent = monitorInfo.watched || "无";
       els.debugToggle.checked = appState.debugEnabled;
       els.logPathInDebug.textContent = stateData.log || "未知";
       restartTimer();
@@ -637,13 +949,30 @@
       });
     }
 
+    function restartService() {
+      setBusy(true);
+      setNotice("");
+
+      return execCommand("sh " + SCRIPT_BASE + "/restart_service.sh").then(function(result) {
+        if (result.errno !== 0) {
+          throw new Error(result.stderr || result.stdout || "重启服务失败");
+        }
+        setNotice((result.stdout || "服务已重启").replace(/^\s+|\s+$/g, ""), false);
+        return loadRuntimeState();
+      }).catch(function(error) {
+        setNotice(error.message || String(error), true);
+      }).then(function() {
+        setBusy(false);
+      });
+    }
+
     function restartTimer() {
       if (appState.timerId) {
         clearInterval(appState.timerId);
       }
       appState.timerId = setInterval(function() {
         loadRuntimeState();
-      }, 3000);
+      }, 5000);
     }
 
     function escapeHtml(text) {
@@ -679,12 +1008,23 @@
       });
     };
     els.loadAppsBtn.onclick = loadApps;
+    els.restartServiceBtn.onclick = restartService;
     els.clearLogBtn.onclick = clearLog;
     els.debugToggle.onchange = function() {
       setDebug(els.debugToggle.checked);
     };
+    els.debugPanelHead.onclick = function() {
+      setDebugPanelExpanded(els.debugPanelBody.style.display === "none");
+    };
+    els.debugPanelHead.onkeydown = function(event) {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        setDebugPanelExpanded(els.debugPanelBody.style.display === "none");
+      }
+    };
 
     setNotice("WebUI 已按稳定模式加载，正在读取状态...", false);
+    setDebugPanelExpanded(false);
     Promise.all([loadRuntimeState(), readConfig()]).then(function() {
       setNotice("WebUI 已就绪。", false);
       try {
