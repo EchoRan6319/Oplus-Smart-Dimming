@@ -9,6 +9,7 @@ public:
     ScreenMonitor();
 
     bool PollStateChange(bool &screenOn);
+    bool WaitForWake(bool &screenOn);
     bool CurrentState() const;
 
 private:

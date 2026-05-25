@@ -79,6 +79,24 @@ std::string ExtractPackageFromLine(const std::string &line) {
     return {};
 }
 
+bool ReadDpmsScreenState(bool &screenOn) {
+    std::string state;
+    if (!ReadTextFile("/sys/class/drm/card0-DSI-1/dpms", state)) {
+        return false;
+    }
+
+    state = Trim(state);
+    if (state == "On") {
+        screenOn = true;
+        return true;
+    }
+    if (state == "Off" || state == "Standby" || state == "Suspend") {
+        screenOn = false;
+        return true;
+    }
+    return false;
+}
+
 } // namespace
 
 Paths BuildPaths(const std::string &moduleDir) {
@@ -211,6 +229,11 @@ std::string Trim(const std::string &value) {
 }
 
 bool IsScreenOn() {
+    bool dpmsScreenOn = false;
+    if (ReadDpmsScreenState(dpmsScreenOn)) {
+        return dpmsScreenOn;
+    }
+
     const auto dump = ExecCommand("/system/bin/dumpsys power 2>/dev/null");
     if (dump.find("mWakefulness=Awake") != std::string::npos) {
         return true;

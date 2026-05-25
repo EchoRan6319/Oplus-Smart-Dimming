@@ -152,7 +152,7 @@ bool AppMonitor::ResolvePackage(std::string &packageName, const std::string &sou
     status_.lastResolveSource = source;
     if (packageName == lastResolvedPackage_) {
         ++status_.repeatedPackages;
-        status_.lastFailureReason = "resolved package unchanged";
+        status_.lastFailureReason.clear();
         return false;
     }
 

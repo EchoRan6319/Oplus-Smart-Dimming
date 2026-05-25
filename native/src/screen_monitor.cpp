@@ -3,11 +3,26 @@
 #include "system_utils.h"
 
 #include <chrono>
+#include <fcntl.h>
+#include <unistd.h>
 
 namespace smart_dimming {
 namespace {
 
 constexpr int kScreenPollMs = 3000;
+constexpr const char *kWaitForFbWake = "/sys/power/wait_for_fb_wake";
+
+bool WaitForPowerEvent(const char *path) {
+    const int fd = open(path, O_RDONLY | O_CLOEXEC);
+    if (fd < 0) {
+        return false;
+    }
+
+    char buffer[16];
+    const ssize_t bytes = read(fd, buffer, sizeof(buffer));
+    close(fd);
+    return bytes >= 0;
+}
 
 } // namespace
 
@@ -31,6 +46,26 @@ bool ScreenMonitor::PollStateChange(bool &screenOn) {
     }
 
     if (newState == currentState_) {
+        return false;
+    }
+
+    currentState_ = newState;
+    screenOn = currentState_;
+    return true;
+}
+
+bool ScreenMonitor::WaitForWake(bool &screenOn) {
+    if (!initialized_ || currentState_) {
+        return false;
+    }
+
+    if (!PathExists(kWaitForFbWake) || !WaitForPowerEvent(kWaitForFbWake)) {
+        return false;
+    }
+
+    const bool newState = IsScreenOn();
+    lastPoll_ = std::chrono::steady_clock::now();
+    if (!newState) {
         return false;
     }
 

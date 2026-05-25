@@ -5,10 +5,12 @@
 #include "system_utils.h"
 
 #include <csignal>
+#include <chrono>
 #include <cstring>
 #include <string>
 #include <thread>
 
+#include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -17,6 +19,8 @@ namespace {
 
 volatile std::sig_atomic_t gShouldStop = 0;
 volatile std::sig_atomic_t gShouldReload = 0;
+constexpr int kScreenOnIdleSleepMs = 200;
+constexpr int kScreenOffIdleSleepMs = 5000;
 
 void HandleSignal(int signal) {
     if (signal == SIGUSR1) {
@@ -24,6 +28,17 @@ void HandleSignal(int signal) {
         return;
     }
     gShouldStop = 1;
+}
+
+void RegisterSignals() {
+    struct sigaction action {};
+    action.sa_handler = HandleSignal;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = 0;
+
+    sigaction(SIGINT, &action, nullptr);
+    sigaction(SIGTERM, &action, nullptr);
+    sigaction(SIGUSR1, &action, nullptr);
 }
 
 std::string ParseModuleDir(int argc, char **argv) {
@@ -50,9 +65,7 @@ int main(int argc, char **argv) {
     EnsureConfigFile(paths);
     AppendBootLog(paths, "native daemon starting");
 
-    std::signal(SIGINT, HandleSignal);
-    std::signal(SIGTERM, HandleSignal);
-    std::signal(SIGUSR1, HandleSignal);
+    RegisterSignals();
 
     if (!WritePidFile(paths.pidFile, static_cast<int>(getpid()))) {
         AppendBootLog(paths, "failed to write pid file");
@@ -121,6 +134,23 @@ int main(int argc, char **argv) {
         std::string packageName;
         std::string runtimeMode;
         if (!monitor.WaitForPackageChange(packageName, runtimeMode, screenOn)) {
+            if (!screenOn) {
+                bool wakeScreenOn = false;
+                if (screenMonitor.WaitForWake(wakeScreenOn)) {
+                    screenOn = wakeScreenOn;
+                    controller.SetScreenState(screenOn);
+                    AppendBootLog(paths, "screen state changed: on");
+                    controller.ApplyPackageChange(ResolveTopPackage(), eventMode ? "event" : "fallback_poll");
+                    controller.PublishState(eventMode ? "event" : "fallback_poll", monitor.DebugSummary(),
+                                            "screen on refresh");
+                    continue;
+                }
+                if (gShouldStop || gShouldReload) {
+                    continue;
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(screenOn ? kScreenOnIdleSleepMs
+                                                                            : kScreenOffIdleSleepMs));
             continue;
         }
 
