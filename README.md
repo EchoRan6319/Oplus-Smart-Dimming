@@ -164,7 +164,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1
 当前 release 包名：
 
 ```text
-build/oplus_smart_dimming_v423_release.zip
+build/oplus_smart_dimming_v425_release.zip
 ```
 
 ## 调试
@@ -185,7 +185,7 @@ build/oplus_smart_dimming_v423_release.zip
 - `resolve_failures`
 - `fallback_polls`
 
-## V4.2.3 实机验证清单
+## V4.2.5 实机验证清单
 
 安装新包后建议逐项确认：
 

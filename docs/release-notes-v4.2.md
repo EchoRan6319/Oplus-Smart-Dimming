@@ -1,4 +1,4 @@
-# 欧加真智能调光 V4.2.3 发布说明
+# 欧加真智能调光 V4.2.5 发布说明
 
 ## 核心变化
 
@@ -31,6 +31,10 @@
   - 强制 fallback：15s
   - 常规无事件兜底：60s
   - `cpuset` 稳定后进一步降低到 180s
+- V4.2.5 针对 OnePlus / ColorOS 16 优化屏幕状态检测：
+  - 优先读取 `/sys/class/drm/card0-DSI-1/dpms`
+  - 只有无法读取 DPMS 时才回退到 `dumpsys power`
+  - 息屏兜底检测间隔调整为 2 秒，降低亮屏恢复延迟
 
 ## 真机验证
 
@@ -52,9 +56,9 @@
 
 正式安装包：
 
-- `build/oplus_smart_dimming_v423_release.zip`
+- `build/oplus_smart_dimming_v425_release.zip`
 
-## V4.2.3 实机验证清单
+## V4.2.5 实机验证清单
 
 - KernelSU 模块页同时显示 `执行` 和 `WebUI` 两个入口
 - 点击 `执行` 后能看到模块目录、重载结果和服务 PID

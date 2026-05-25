@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $packageDir = Join-Path $root "build\release-package"
-$zipPath = Join-Path $root "build\oplus_smart_dimming_v424_release.zip"
+$zipPath = Join-Path $root "build\oplus_smart_dimming_v425_release.zip"
 
 New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
 Remove-Item -Recurse -Force (Join-Path $packageDir "*") -ErrorAction SilentlyContinue

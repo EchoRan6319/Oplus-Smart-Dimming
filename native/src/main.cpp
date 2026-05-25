@@ -20,7 +20,7 @@ namespace {
 volatile std::sig_atomic_t gShouldStop = 0;
 volatile std::sig_atomic_t gShouldReload = 0;
 constexpr int kScreenOnIdleSleepMs = 200;
-constexpr int kScreenOffIdleSleepMs = 5000;
+constexpr int kScreenOffIdleSleepMs = 2000;
 
 void HandleSignal(int signal) {
     if (signal == SIGUSR1) {
